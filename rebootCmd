@@ -1,0 +1,11 @@
+modem = peripheral.wrap("right")
+
+modem.open(120)
+
+while true do
+    local event, modemSide, senderChannel, replyChannel, message, senderDistance = os.pullEvent("modem_message")
+    if message == "reboot" then
+        os.reboot()
+    end
+end
+

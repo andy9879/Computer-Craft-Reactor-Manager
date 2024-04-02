@@ -1,0 +1,4 @@
+modem = peripheral.wrap("back")
+
+modem.transmit(120,100,"reboot")
+

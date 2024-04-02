@@ -1,0 +1,21 @@
+wiredModem = peripheral.wrap("left")
+
+wirelessModem = peripheral.wrap("right")
+
+for i = 1 , 128 do
+    wiredModem.open(i)
+    wirelessModem.open(i)
+end
+
+while true do 
+    local event, modemSide, senderChannel, replyChannel, message, senderDistance = os.pullEvent("modem_message")
+    if(modemSide == "left") then 
+        wirelessModem.transmit(senderChannel,replyChannel,message)
+        print("sending msg on ".. tostring(senderChannel) .." : " .. tostring(message))
+    end
+
+    if(modemSide == "right") then 
+        wiredModem.transmit(senderChannel,replyChannel,message)
+        print("sending msg on ".. tostring(senderChannel) .." : " .. tostring(message))
+    end
+end

@@ -1,0 +1,78 @@
+reactor = peripheral.wrap("back")
+
+gate = peripheral.wrap("left")
+
+modem = peripheral.wrap("right")
+
+
+gate.setOverrideEnabled(true)
+
+
+flow = 0
+
+
+print(info)
+
+info = reactor.getReactorInfo()
+
+maxTemp = 7500
+
+minEnergySaturation = info.maxEnergySaturation * 0.10
+
+local error_prior = 0
+local integral_prior = 0
+local kp = 0.2
+local ki = 0.002
+local kd = 0.15
+local bias = 0
+
+local integralMin = -10000
+
+targetStrength = info.maxFieldStrength * 0.005
+
+local newTabID = multishell.launch({}, "/disk/rebootCmd")
+
+multishell.setTitle(newTabID, "reboot Cmd")
+
+lowestField = 100
+
+while true do
+    info = reactor.getReactorInfo()
+
+    modem.transmit(90,100,info)
+
+    if(lowestField > (info.fieldStrength / info.maxFieldStrength) * 100) then 
+        lowestField = (info.fieldStrength / info.maxFieldStrength) * 100
+    end
+
+    print("P: ",kp," I: ",integral," D: " ,derivative, " LF: ", (math.floor(lowestField * 100) / 100))
+    
+
+    --PID
+	
+	error = targetStrength - info.fieldStrength
+	integral = integral_prior+error
+
+    if(integral < integralMin) then
+        integral = integralMin
+    end
+
+	derivative = error-error_prior	
+	
+	value_out = math.floor(kp*error+ki*integral+kd*derivative+bias)
+	
+	error_prior = error
+	integral_prior = integral
+
+
+    if info.energySaturation < minEnergySaturation or info.temperature > maxTemp then
+        redstone.setOutput('bottom',true)
+    else 
+        redstone.setOutput('bottom',false)
+    end
+
+    flow = value_out
+    gate.setFlowOverride(value_out)
+    os.sleep(0.25)
+end
+

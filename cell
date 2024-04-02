@@ -1,0 +1,42 @@
+cell = peripheral.wrap("back")
+local modem = peripheral.wrap("right") 
+
+local id = 0
+
+local newTabID = multishell.launch({}, "/disk/rebootCmd")
+
+multishell.setTitle(newTabID, "reboot Cmd")
+
+print("started")
+
+sleep(3 + (os.getComputerID() * 0.2))
+
+function getId()
+    modem.transmit(100, 101, "Id Request") 
+    modem.open(101)
+
+    local event, modemSide, senderChannel, replyChannel, message, senderDistance = os.pullEvent("modem_message")
+
+    modem.close(101)
+
+    print("id ",message)
+
+    return message
+end
+
+function transmitPower(ch)
+    local cellStorage = cell.getEnergyStored()
+
+    modem.transmit(ch, 101, cellStorage) 
+
+end
+
+sleep(5)
+
+id = getId()
+
+while true do 
+    transmitPower(id)
+    sleep(1)
+end
+
